@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Festival Game</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      overflow: hidden;
+      font-family: 'Arial', sans-serif;
+    }
+
+    #game-container {
+      position: relative;
+      width: 480px;
+      height: 720px;
+      background: #1a0a00;
+      overflow: hidden;
+    }
+
+    /* ─── FADE OVERLAY ─── */
+    #fade-overlay {
+      position: absolute;
+      inset: 0;
+      background: #000;
+      opacity: 0;
+      pointer-events: none;
+      z-index: 100;
+      transition: opacity 1s ease;
+    }
+    #fade-overlay.fade-in  { opacity: 1; }
+    #fade-overlay.fade-out { opacity: 0; }
+    #fade-overlay.instant-black { opacity: 1; transition: none; }
+
+    /* ══════════════════════════════
+       SCENE 1
+    ══════════════════════════════ */
+    #scene1 {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+    }
+
+    #firecracker {
+      position: absolute;
+      top: 60px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 120px;
+      cursor: default;
+      user-select: none;
+      transform-origin: top center;
+    }
+    #firecracker.swing {
+      animation: swing 0.6s ease-in-out infinite alternate;
+    }
+    @keyframes swing {
+      from { transform: translateX(-50%) rotate(-10deg); }
+      to   { transform: translateX(-50%) rotate(10deg);  }
+    }
+
+    #match {
+      position: absolute;
+      bottom: 80px;
+      left: 40px;
+      width: 70px;
+      cursor: grab;
+      user-select: none;
+    }
+    #match:active { cursor: grabbing; }
+
+    /* ══════════════════════════════
+       SCENE 2
+    ══════════════════════════════ */
+    #scene2 {
+      position: absolute;
+      inset: 0;
+      display: none;
+    }
+
+    #hand-up {
+      position: absolute;
+      width: 180px;
+      left: 50%;
+      transform: translateX(-50%);
+      top: -20px;
+      user-select: none;
+      pointer-events: none;
+    }
+
+    #hand-down {
+      position: absolute;
+      width: 180px;
+      left: 50%;
+      transform: translateX(-50%);
+      bottom: -20px;
+      user-select: none;
+      pointer-events: none;
+    }
+
+    #countdown {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 120px;
+      font-weight: bold;
+      color: #ff4444;
+      text-shadow: 0 0 20px #ff0000, 2px 2px 0 #800000;
+      opacity: 0;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    #attempt-display {
+      position: absolute;
+      top: 10px;
+      right: 14px;
+      font-size: 18px;
+      color: #fff;
+      z-index: 10;
+      text-shadow: 1px 1px 2px #000;
+    }
+
+    /* ══════════════════════════════
+       SCENE 3
+    ══════════════════════════════ */
+    #scene3 {
+      position: absolute;
+      inset: 0;
+      background: #ffe8c0;
+      display: none;
+    }
+
+    #bowl {
+      position: absolute;
+      bottom: 60px;
+      left: 40px;
+      width: 110px;
+      user-select: none;
+      pointer-events: none;
+    }
+
+    #filling {
+      position: absolute;
+      width: 80px;
+      cursor: grab;
+      user-select: none;
+      animation: floatFilling 2s ease-in-out infinite;
+    }
+    #filling:active { cursor: grabbing; }
+    @keyframes floatFilling {
+      0%, 100% { transform: translateY(0); }
+      50%       { transform: translateY(-10px); }
+    }
+    #filling.dragging { animation: none; }
+
+    #crust {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 130px;
+      user-select: none;
+      pointer-events: none;
+    }
+
+    #dumpling {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 140px;
+      display: none;
+      user-select: none;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+<div id="game-container">
+
+  <!-- Fade overlay (sits above scenes) -->
+  <div id="fade-overlay" class="instant-black"></div>
+
+  <!-- ══ SCENE 1 ══ -->
+  <div id="scene1">
+    <img id="firecracker" src="Homework png/firecrackers.png" alt="firecracker" draggable="false" />
+    <img id="match"       src="Homework png/match.png"        alt="match" />
+  </div>
+
+  <!-- ══ SCENE 2 ══ -->
+  <div id="scene2">
+    <div id="attempt-display">Attempts: <span id="attempt-count">3</span></div>
+    <img id="hand-up"   src="Homework png/hand(up).png"   alt="envelope hand" />
+    <img id="hand-down" src="Homework png/hand(down).png" alt="player hand" />
+    <div id="countdown"></div>
+  </div>
+
+  <!-- ══ SCENE 3 ══ -->
+  <div id="scene3">
+    <img id="bowl"     src="Homework png/bowl.png"     alt="bowl" />
+    <img id="filling"  src="Homework png/filling.png"  alt="filling" />
+    <img id="crust"    src="Homework png/crust.png"    alt="dumpling wrapper" />
+    <img id="dumpling" src="Homework png/dumpling.png" alt="dumpling" />
+  </div>
+
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════
+   UTILITIES
+═══════════════════════════════════════════════════ */
+const gc   = document.getElementById('game-container');
+const fade = document.getElementById('fade-overlay');
+
+function gcRect() { return gc.getBoundingClientRect(); }
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+/** Fade overlay to black */
+function fadeToBlack() {
+  return new Promise(resolve => {
+    fade.style.transition = 'opacity 1s ease';
+    fade.classList.add('fade-in');
+    fade.classList.remove('fade-out');
+    setTimeout(resolve, 1000);
+  });
+}
+/** Fade overlay away from black */
+function fadeFromBlack() {
+  return new Promise(resolve => {
+    fade.style.transition = 'opacity 1s ease';
+    fade.classList.remove('fade-in');
+    fade.classList.add('fade-out');
+    setTimeout(resolve, 1000);
+  });
+}
+
+/* ═══════════════════════════════════════════════════
+   SCENE 1 — Firecracker & Match
+═══════════════════════════════════════════════════ */
+const scene1      = document.getElementById('scene1');
+const firecracker = document.getElementById('firecracker');
+const match       = document.getElementById('match');
+
+let matchDragging = false;
+let matchOffX = 0, matchOffY = 0;
+
+match.addEventListener('mousedown', startDragMatch);
+match.addEventListener('touchstart', startDragMatchTouch, { passive: false });
+
+function startDragMatch(e) {
+  e.preventDefault();
+  const r = match.getBoundingClientRect();
+  const gcr = gcRect();
+  matchOffX = e.clientX - r.left;
+  matchOffY = e.clientY - r.top;
+  matchDragging = true;
+  match.style.cursor = 'grabbing';
+  document.addEventListener('mousemove', dragMatch);
+  document.addEventListener('mouseup', dropMatch);
+}
+function startDragMatchTouch(e) {
+  e.preventDefault();
+  const t = e.touches[0];
+  const r = match.getBoundingClientRect();
+  matchOffX = t.clientX - r.left;
+  matchOffY = t.clientY - r.top;
+  matchDragging = true;
+  document.addEventListener('touchmove', dragMatchTouch, { passive: false });
+  document.addEventListener('touchend', dropMatchTouch);
+}
+
+function dragMatch(e) {
+  if (!matchDragging) return;
+  moveMatch(e.clientX, e.clientY);
+}
+function dragMatchTouch(e) {
+  if (!matchDragging) return;
+  e.preventDefault();
+  moveMatch(e.touches[0].clientX, e.touches[0].clientY);
+}
+function moveMatch(cx, cy) {
+  const gcr = gcRect();
+  let x = cx - gcr.left - matchOffX;
+  let y = cy - gcr.top  - matchOffY;
+  match.style.left = x + 'px';
+  match.style.top  = y + 'px';
+  match.style.bottom = 'auto';
+}
+
+function dropMatch(e) {
+  document.removeEventListener('mousemove', dragMatch);
+  document.removeEventListener('mouseup', dropMatch);
+  match.style.cursor = 'grab';
+  checkMatchOnFirecracker();
+}
+function dropMatchTouch(e) {
+  document.removeEventListener('touchmove', dragMatchTouch);
+  document.removeEventListener('touchend', dropMatchTouch);
+  checkMatchOnFirecracker();
+}
+
+function rectsOverlap(a, b) {
+  return !(a.right < b.left || a.left > b.right ||
+           a.bottom < b.top || a.top > b.bottom);
+}
+
+function checkMatchOnFirecracker() {
+  if (!matchDragging) return;
+  matchDragging = false;
+  const mr = match.getBoundingClientRect();
+  const fr = firecracker.getBoundingClientRect();
+  if (rectsOverlap(mr, fr)) {
+    lightFirecracker();
+  }
+}
+
+async function lightFirecracker() {
+  // Remove match listeners so it can't be dragged again
+  match.removeEventListener('mousedown', startDragMatch);
+  match.removeEventListener('touchstart', startDragMatchTouch);
+
+  // Match disappears instantly
+  match.style.display = 'none';
+
+  // Replace firecracker image with lit version
+  firecracker.src = 'Homework png/firecrackers(kindle).png';
+
+  // Swing animation
+  firecracker.style.transformOrigin = 'top center';
+  // Reset inline transform so CSS animation takes over cleanly
+  firecracker.style.transform = '';
+  firecracker.style.left = '50%';
+  firecracker.classList.add('swing');
+
+  // Wait 3 seconds then fade to Scene 2
+  await sleep(3000);
+  await fadeToBlack();
+  startScene2();
+}
+
+/* ═══════════════════════════════════════════════════
+   SCENE 2 — Envelope Dodge / Catch Game
+═══════════════════════════════════════════════════ */
+const scene2       = document.getElementById('scene2');
+const handUp       = document.getElementById('hand-up');
+const handDown     = document.getElementById('hand-down');
+const countdownEl  = document.getElementById('countdown');
+const attemptCount = document.getElementById('attempt-count');
+
+// Game state
+let s2AttemptsLeft = 3;  // 3 dodges then catch on attempt 4
+let s2Phase        = 'idle'; // idle | intro | countdown | play | drop | result
+let s2HandUpX      = 0;   // centre x of hand-up in game coords
+let s2HandDownX    = 240; // centre x of player hand in game coords
+let s2HandUpY      = 0;   // top y of hand-up
+let s2HandDownY    = 0;   // top y of hand-down (bottom anchor)
+let s2AnimId       = null;
+let s2DropActive   = false;
+let s2DropY        = 0;
+let s2DropSpeed    = 0;
+let s2Caught       = false;
+let s2Moving       = false;
+let s2MoveDir      = 1;
+let s2MoveSpeed    = 2.2;
+
+const HAND_UP_W    = 180;
+const HAND_DOWN_W  = 180;
+const GC_W         = 480;
+const GC_H         = 720;
+const HAND_UP_H    = 160; // approx image height
+const HAND_DOWN_H  = 160;
+
+// Player keyboard / touch tracking
+let keyLeft  = false;
+let keyRight = false;
+let touchStartX = 0;
+let touchDeltaX = 0;
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowLeft'  || e.key === 'a') keyLeft  = true;
+  if (e.key === 'ArrowRight' || e.key === 'd') keyRight = true;
+});
+document.addEventListener('keyup', e => {
+  if (e.key === 'ArrowLeft'  || e.key === 'a') keyLeft  = false;
+  if (e.key === 'ArrowRight' || e.key === 'd') keyRight = false;
+});
+
+scene2.addEventListener('touchstart', e => {
+  touchStartX = e.touches[0].clientX;
+  touchDeltaX = 0;
+}, { passive: true });
+scene2.addEventListener('touchmove', e => {
+  touchDeltaX = e.touches[0].clientX - touchStartX;
+  touchStartX = e.touches[0].clientX;
+}, { passive: true });
+
+async function startScene2() {
+  // Reset state
+  s2AttemptsLeft = 3;
+  s2Phase = 'intro';
+  s2DropActive = false;
+  s2Caught = false;
+  keyLeft = false; keyRight = false;
+  touchDeltaX = 0;
+
+  // Show scene 2
+  scene1.style.display  = 'none';
+  scene2.style.display  = 'block';
+  scene3.style.display  = 'none';
+
+  // Reset hand positions (off-screen)
+  s2HandUpX   = GC_W / 2 - HAND_UP_W / 2;
+  s2HandUpY   = -HAND_UP_H - 20;
+  s2HandDownY = GC_H + 20;
+  s2HandDownX = GC_W / 2 - HAND_DOWN_W / 2;
+
+  applyHandUpPos();
+  applyHandDownPos();
+  attemptCount.textContent = s2AttemptsLeft;
+
+  await fadeFromBlack();
+
+  // Intro: both hands slide to starting positions over 1 second
+  await animateIntro();
+
+  // Countdown 3-2-1
+  await showCountdown();
+
+  // Start gameplay loop
+  s2Phase    = 'play';
+  s2Moving   = true;
+  s2MoveDir  = 1;
+  s2MoveSpeed = 2.5;
+
+  if (s2AnimId) cancelAnimationFrame(s2AnimId);
+  s2AnimId = requestAnimationFrame(gameLoop2);
+}
+
+function applyHandUpPos() {
+  handUp.style.left = s2HandUpX + 'px';
+  handUp.style.top  = s2HandUpY + 'px';
+  handUp.style.transform = '';
+}
+function applyHandDownPos() {
+  handDown.style.left   = s2HandDownX + 'px';
+  handDown.style.bottom = 'auto';
+  handDown.style.top    = s2HandDownY + 'px';
+  handDown.style.transform = '';
+}
+
+function animateIntro() {
+  return new Promise(resolve => {
+    const targetUpY   = 40;                           // top of screen area
+    const targetDownY = GC_H - HAND_DOWN_H - 40;     // bottom of screen area
+    const duration    = 1000;
+    const startTime   = performance.now();
+    const startUpY    = s2HandUpY;
+    const startDownY  = s2HandDownY;
+
+    function step(now) {
+      const t = Math.min((now - startTime) / duration, 1);
+      const ease = t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+      s2HandUpY   = startUpY   + (targetUpY   - startUpY)   * ease;
+      s2HandDownY = startDownY + (targetDownY - startDownY) * ease;
+      applyHandUpPos();
+      applyHandDownPos();
+      if (t < 1) requestAnimationFrame(step);
+      else resolve();
+    }
+    requestAnimationFrame(step);
+  });
+}
+
+async function showCountdown() {
+  for (const num of [3, 2, 1]) {
+    countdownEl.textContent = num;
+    countdownEl.style.opacity = '1';
+    await sleep(600);
+    countdownEl.style.opacity = '0';
+    await sleep(200);
+  }
+  countdownEl.textContent = '';
+}
+
+let s2LastTime = 0;
+let s2DropTimer = 0;       // time before random drop (ms)
+let s2HorizTime = 0;       // time spent moving horizontally
+const S2_MIN_HORIZ = 800;  // min ms of horizontal movement before drop
+const S2_MAX_HORIZ = 2200; // max ms
+
+function scheduleNextDrop() {
+  s2HorizTime = 0;
+  s2DropTimer = S2_MIN_HORIZ + Math.random() * (S2_MAX_HORIZ - S2_MIN_HORIZ);
+  s2DropActive = false;
+  s2DropY = s2HandUpY + HAND_UP_H;
+  s2DropSpeed = 0;
+}
+
+function gameLoop2(now) {
+  if (s2Phase !== 'play') return;
+  const dt = Math.min(now - (s2LastTime || now), 50); // cap at 50ms
+  s2LastTime = now;
+
+  // ── Move top hand left/right ──
+  if (!s2DropActive) {
+    s2HandUpX += s2MoveDir * s2MoveSpeed * dt / 16;
+    // bounce off walls
+    if (s2HandUpX <= 0) {
+      s2HandUpX = 0;
+      s2MoveDir = 1;
+    }
+    if (s2HandUpX + HAND_UP_W >= GC_W) {
+      s2HandUpX = GC_W - HAND_UP_W;
+      s2MoveDir = -1;
+    }
+    applyHandUpPos();
+
+    // Accumulate horizontal time; trigger drop when ready
+    s2HorizTime += dt;
+    if (s2HorizTime >= s2DropTimer) {
+      s2DropActive = true;
+      s2DropSpeed  = 5;
+    }
+  } else {
+    // ── Drop phase ──
+    s2DropSpeed += 0.18 * dt / 16; // gravity
+    s2HandUpY   += s2DropSpeed * dt / 16;
+    applyHandUpPos();
+
+    // Check collision with bottom hand
+    const upCx   = s2HandUpX   + HAND_UP_W   / 2;
+    const downCx  = s2HandDownX + HAND_DOWN_W / 2;
+    const upBottom = s2HandUpY + HAND_UP_H;
+    const downTop  = s2HandDownY;
+
+    const isOverlappingX = Math.abs(upCx - downCx) < (HAND_UP_W + HAND_DOWN_W) / 2 * 0.6;
+    const isOverlappingY = upBottom >= downTop && s2HandUpY < s2HandDownY + HAND_DOWN_H;
+
+    const isCatchRound = (s2AttemptsLeft === 0); // catch on last attempt
+
+    if (isOverlappingX && isOverlappingY) {
+      cancelAnimationFrame(s2AnimId);
+      if (isCatchRound) {
+        handleS2Success();
+      } else {
+        handleS2Hit();
+      }
+      return;
+    }
+
+    // Envelope fell past bottom — dodge success / miss-catch
+    if (s2HandUpY > GC_H + 10) {
+      cancelAnimationFrame(s2AnimId);
+      if (isCatchRound) {
+        // Failed to catch → restart
+        handleS2Fail();
+      } else {
+        // Successfully dodged
+        handleS2Dodge();
+      }
+      return;
+    }
+  }
+
+  // ── Move bottom hand (player) ──
+  const playerSpeed = 5;
+  if (keyLeft || touchDeltaX < -2) {
+    s2HandDownX -= playerSpeed * dt / 16;
+    touchDeltaX = 0;
+  }
+  if (keyRight || touchDeltaX > 2) {
+    s2HandDownX += playerSpeed * dt / 16;
+    touchDeltaX = 0;
+  }
+  s2HandDownX = Math.max(0, Math.min(GC_W - HAND_DOWN_W, s2HandDownX));
+  applyHandDownPos();
+
+  s2AnimId = requestAnimationFrame(gameLoop2);
+}
+
+async function handleS2Dodge() {
+  // Successful dodge: reset top hand, decrement attempts
+  s2AttemptsLeft--;
+  attemptCount.textContent = Math.max(s2AttemptsLeft, 0);
+
+  if (s2AttemptsLeft === 0) {
+    // Next round: player must catch
+    // Brief pause, reset positions, re-run
+    await sleep(400);
+    s2HandUpY  = 40;
+    s2HandUpX  = GC_W / 2 - HAND_UP_W / 2;
+    applyHandUpPos();
+    scheduleNextDrop();
+    s2Phase = 'play';
+    s2LastTime = 0;
+    s2AnimId = requestAnimationFrame(gameLoop2);
+  } else {
+    await sleep(400);
+    s2HandUpY  = 40;
+    s2HandUpX  = GC_W / 2 - HAND_UP_W / 2;
+    applyHandUpPos();
+    scheduleNextDrop();
+    s2Phase = 'play';
+    s2LastTime = 0;
+    s2AnimId = requestAnimationFrame(gameLoop2);
+  }
+}
+
+async function handleS2Hit() {
+  // Got hit while dodging → fail → restart
+  await handleS2Fail();
+}
+
+async function handleS2Fail() {
+  s2Phase = 'result';
+  await fadeToBlack();
+  await sleep(500);
+  startScene2Restart();
+}
+
+async function startScene2Restart() {
+  // Restart from fade-out stage (just re-run startScene2 flow)
+  s2AttemptsLeft = 3;
+  s2Phase = 'intro';
+  s2DropActive = false;
+  s2Caught = false;
+  keyLeft = false; keyRight = false; touchDeltaX = 0;
+
+  s2HandUpX   = GC_W / 2 - HAND_UP_W / 2;
+  s2HandUpY   = -HAND_UP_H - 20;
+  s2HandDownY = GC_H + 20;
+  s2HandDownX = GC_W / 2 - HAND_DOWN_W / 2;
+  applyHandUpPos();
+  applyHandDownPos();
+  attemptCount.textContent = s2AttemptsLeft;
+
+  await fadeFromBlack();
+  await animateIntro();
+  await showCountdown();
+
+  s2Phase     = 'play';
+  s2Moving    = true;
+  s2MoveDir   = 1;
+  s2MoveSpeed = 2.5;
+  s2LastTime  = 0;
+
+  scheduleNextDrop();
+  s2AnimId = requestAnimationFrame(gameLoop2);
+}
+
+async function handleS2Success() {
+  // Caught the envelope!
+  s2Phase = 'result';
+  await sleep(800);
+  await fadeToBlack();
+  startScene3();
+}
+
+// Initialize the drop schedule once gameplay begins
+function initScene2Game() {
+  scheduleNextDrop();
+}
+
+/* ═══════════════════════════════════════════════════
+   SCENE 3 — Filling Drag onto Wrapper
+═══════════════════════════════════════════════════ */
+const scene3  = document.getElementById('scene3');
+const bowl    = document.getElementById('bowl');
+const filling = document.getElementById('filling');
+const crust   = document.getElementById('crust');
+const dumpling = document.getElementById('dumpling');
+
+let fillingDragging = false;
+let fillOffX = 0, fillOffY = 0;
+
+function positionScene3Elements() {
+  // Bowl: lower left
+  bowl.style.position    = 'absolute';
+  bowl.style.bottom      = '60px';
+  bowl.style.left        = '40px';
+  // Filling: above the bowl, floating
+  filling.style.position  = 'absolute';
+  filling.style.left      = '55px';
+  filling.style.bottom    = '170px';
+  filling.style.top       = 'auto';
+}
+
+async function startScene3() {
+  scene1.style.display = 'none';
+  scene2.style.display = 'none';
+  scene3.style.display = 'block';
+
+  bowl.style.display     = 'block';
+  filling.style.display  = 'block';
+  crust.style.display    = 'block';
+  dumpling.style.display = 'none';
+
+  positionScene3Elements();
+
+  filling.addEventListener('mousedown', startDragFilling);
+  filling.addEventListener('touchstart', startDragFillingTouch, { passive: false });
+
+  await fadeFromBlack();
+}
+
+function startDragFilling(e) {
+  e.preventDefault();
+  const r   = filling.getBoundingClientRect();
+  fillOffX  = e.clientX - r.left;
+  fillOffY  = e.clientY - r.top;
+  fillingDragging = true;
+  filling.classList.add('dragging');
+  document.addEventListener('mousemove', dragFilling);
+  document.addEventListener('mouseup',   dropFilling);
+}
+function startDragFillingTouch(e) {
+  e.preventDefault();
+  const t  = e.touches[0];
+  const r  = filling.getBoundingClientRect();
+  fillOffX = t.clientX - r.left;
+  fillOffY = t.clientY - r.top;
+  fillingDragging = true;
+  filling.classList.add('dragging');
+  document.addEventListener('touchmove', dragFillingTouch, { passive: false });
+  document.addEventListener('touchend',  dropFillingTouch);
+}
+
+function dragFilling(e) {
+  if (!fillingDragging) return;
+  moveFilling(e.clientX, e.clientY);
+}
+function dragFillingTouch(e) {
+  if (!fillingDragging) return;
+  e.preventDefault();
+  moveFilling(e.touches[0].clientX, e.touches[0].clientY);
+}
+function moveFilling(cx, cy) {
+  const gcr = gcRect();
+  let x = cx - gcr.left - fillOffX;
+  let y = cy - gcr.top  - fillOffY;
+  filling.style.left   = x + 'px';
+  filling.style.top    = y + 'px';
+  filling.style.bottom = 'auto';
+}
+
+function dropFilling(e) {
+  document.removeEventListener('mousemove', dragFilling);
+  document.removeEventListener('mouseup',   dropFilling);
+  filling.classList.remove('dragging');
+  checkFillingOnCrust();
+}
+function dropFillingTouch(e) {
+  document.removeEventListener('touchmove', dragFillingTouch);
+  document.removeEventListener('touchend',  dropFillingTouch);
+  filling.classList.remove('dragging');
+  checkFillingOnCrust();
+}
+
+function checkFillingOnCrust() {
+  if (!fillingDragging) return;
+  fillingDragging = false;
+  const fr = filling.getBoundingClientRect();
+  const cr = crust.getBoundingClientRect();
+  if (rectsOverlap(fr, cr)) {
+    makeDumpling();
+  }
+}
+
+function makeDumpling() {
+  filling.removeEventListener('mousedown', startDragFilling);
+  filling.removeEventListener('touchstart', startDragFillingTouch);
+
+  bowl.style.display     = 'none';
+  filling.style.display  = 'none';
+  crust.style.display    = 'none';
+  dumpling.style.display = 'block';
+
+  // After brief display, fade scene (or just leave it)
+  setTimeout(() => {
+    dumpling.style.transition = 'opacity 1s';
+    dumpling.style.opacity    = '0';
+  }, 1500);
+}
+
+/* ═══════════════════════════════════════════════════
+   BOOT — Show Scene 1 with fade-in
+═══════════════════════════════════════════════════ */
+window.addEventListener('load', async () => {
+  // Overlay starts black (instant-black class)
+  scene1.style.display = 'block';
+  scene2.style.display = 'none';
+  scene3.style.display = 'none';
+
+  // Fade-in black overlay so Scene 1 appears
+  await sleep(300);
+  fade.classList.remove('instant-black');
+  await fadeFromBlack();
+
+  // Schedule drop timer for scene2 to be ready
+  scheduleNextDrop();
+});
+</script>
+</body>
+</html>
