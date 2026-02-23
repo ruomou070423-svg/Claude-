@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
   <title>Festival Game</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -19,8 +19,8 @@
 
     #game-container {
       position: relative;
-      width: 480px;
-      height: 720px;
+      width: 720px;
+      height: 480px;
       background: #1a0a00;
       overflow: hidden;
     }
@@ -52,10 +52,11 @@
 
     #firecracker {
       position: absolute;
-      top: 60px;
+      top: 10px;
       left: 50%;
       transform: translateX(-50%);
-      width: 120px;
+      height: 75%;
+      width: auto;
       cursor: default;
       user-select: none;
       transform-origin: top center;
@@ -70,9 +71,9 @@
 
     #match {
       position: absolute;
-      bottom: 80px;
+      bottom: 40px;
       left: 40px;
-      width: 70px;
+      width: 55px;
       cursor: grab;
       user-select: none;
     }
@@ -378,8 +379,8 @@ let s2MoveSpeed    = 2.2;
 
 const HAND_UP_W    = 180;
 const HAND_DOWN_W  = 180;
-const GC_W         = 480;
-const GC_H         = 720;
+const GC_W         = 720;
+const GC_H         = 480;
 const HAND_UP_H    = 160; // approx image height
 const HAND_DOWN_H  = 160;
 
@@ -423,8 +424,8 @@ async function startScene2() {
 
   // Reset hand positions (off-screen)
   s2HandUpX   = GC_W / 2 - HAND_UP_W / 2;
-  s2HandUpY   = -HAND_UP_H - 20;
-  s2HandDownY = GC_H + 20;
+  s2HandUpY   = -HAND_UP_H - 10;
+  s2HandDownY = GC_H + 10;
   s2HandDownX = GC_W / 2 - HAND_DOWN_W / 2;
 
   applyHandUpPos();
@@ -463,8 +464,8 @@ function applyHandDownPos() {
 
 function animateIntro() {
   return new Promise(resolve => {
-    const targetUpY   = 40;                           // top of screen area
-    const targetDownY = GC_H - HAND_DOWN_H - 40;     // bottom of screen area
+    const targetUpY   = 20;                           // top of screen area
+    const targetDownY = GC_H - HAND_DOWN_H - 20;     // bottom of screen area
     const duration    = 1000;
     const startTime   = performance.now();
     const startUpY    = s2HandUpY;
@@ -596,27 +597,14 @@ async function handleS2Dodge() {
   s2AttemptsLeft--;
   attemptCount.textContent = Math.max(s2AttemptsLeft, 0);
 
-  if (s2AttemptsLeft === 0) {
-    // Next round: player must catch
-    // Brief pause, reset positions, re-run
-    await sleep(400);
-    s2HandUpY  = 40;
-    s2HandUpX  = GC_W / 2 - HAND_UP_W / 2;
-    applyHandUpPos();
-    scheduleNextDrop();
-    s2Phase = 'play';
-    s2LastTime = 0;
-    s2AnimId = requestAnimationFrame(gameLoop2);
-  } else {
-    await sleep(400);
-    s2HandUpY  = 40;
-    s2HandUpX  = GC_W / 2 - HAND_UP_W / 2;
-    applyHandUpPos();
-    scheduleNextDrop();
-    s2Phase = 'play';
-    s2LastTime = 0;
-    s2AnimId = requestAnimationFrame(gameLoop2);
-  }
+  await sleep(400);
+  s2HandUpY  = 20;
+  s2HandUpX  = GC_W / 2 - HAND_UP_W / 2;
+  applyHandUpPos();
+  scheduleNextDrop();
+  s2Phase = 'play';
+  s2LastTime = 0;
+  s2AnimId = requestAnimationFrame(gameLoop2);
 }
 
 async function handleS2Hit() {
@@ -640,8 +628,8 @@ async function startScene2Restart() {
   keyLeft = false; keyRight = false; touchDeltaX = 0;
 
   s2HandUpX   = GC_W / 2 - HAND_UP_W / 2;
-  s2HandUpY   = -HAND_UP_H - 20;
-  s2HandDownY = GC_H + 20;
+  s2HandUpY   = -HAND_UP_H - 10;
+  s2HandDownY = GC_H + 10;
   s2HandDownX = GC_W / 2 - HAND_DOWN_W / 2;
   applyHandUpPos();
   applyHandDownPos();
