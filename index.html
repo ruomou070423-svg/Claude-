@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Intro</title>
+  <style>
+    *, *::before, *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #000;
+    }
+
+    /* ─── Intro wrapper ──────────────────────────────────────── */
+    #intro {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    /* ─── Individual scene ───────────────────────────────────── */
+    .scene {
+      position: absolute;
+      inset: 0;
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 400ms ease-in-out;
+    }
+
+    .scene.active {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    /* ─── Background images ──────────────────────────────────── */
+    #scene-1 { background-image: url('pngassets/boss1.png'); }
+    #scene-2 { background-image: url('pngassets/boss2.png'); }
+
+    /* ─── Dialogue bubble ────────────────────────────────────── */
+    .dialogue {
+      position: absolute;
+
+      /*
+       * Default placement: upper-left quadrant, to the left of the character.
+       * Adjust these values once Boss images are in place.
+       */
+      left: 6%;
+      top: 18%;
+
+      max-width: 32%;
+      height: auto;
+
+      animation: float 3.5s ease-in-out infinite;
+    }
+
+    /* ─── Floating keyframes ─────────────────────────────────── */
+    @keyframes float {
+      0%,
+      100% { transform: translateY(0px); }
+      50%  { transform: translateY(-8px); }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="intro">
+
+    <!-- Scene 1 ─ Boss1 background + Dialog1 bubble -->
+    <div class="scene active" id="scene-1">
+      <img
+        class="dialogue"
+        src="pngassets/dialog1.png"
+        alt=""
+        draggable="false"
+      >
+    </div>
+
+    <!-- Scene 2 ─ Boss2 background + Dialog2 bubble -->
+    <div class="scene" id="scene-2">
+      <img
+        class="dialogue"
+        src="pngassets/dialog2.png"
+        alt=""
+        draggable="false"
+      >
+    </div>
+
+  </div>
+
+  <script>
+    (function () {
+      const intro   = document.getElementById('intro');
+      const scene1  = document.getElementById('scene-1');
+      const scene2  = document.getElementById('scene-2');
+
+      const SCENES = [scene1, scene2];
+      let current  = 0;
+
+      /* Fade-transition to the next scene on any click */
+      intro.addEventListener('click', function () {
+        const next = current + 1;
+
+        if (next < SCENES.length) {
+          SCENES[current].classList.remove('active');
+          SCENES[next].classList.add('active');
+          current = next;
+        } else {
+          /* All intro scenes shown — hand off to the main game */
+          intro.dispatchEvent(new CustomEvent('intro:complete', { bubbles: true }));
+        }
+      });
+
+      /* Hook: listen for intro completion elsewhere if needed */
+      // document.addEventListener('intro:complete', startGame);
+    })();
+  </script>
+
+</body>
+</html>
