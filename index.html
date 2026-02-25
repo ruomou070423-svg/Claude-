@@ -42,7 +42,7 @@
 
     .scene.active {
       opacity: 1;
-      pointer-events: all;
+      pointer-events: auto;
     }
 
     /* ─── Background images ──────────────────────────────────── */
@@ -61,11 +61,11 @@
       max-width: 38%;
       height: auto;
 
-      animation: float 3.5s ease-in-out infinite;
+      animation: bubble-float 3.5s ease-in-out infinite;
     }
 
     /* ─── Floating keyframes ─────────────────────────────────── */
-    @keyframes float {
+    @keyframes bubble-float {
       0%,
       100% { transform: translateY(0px); }
       50%  { transform: translateY(-8px); }
