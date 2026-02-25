@@ -42,32 +42,30 @@
 
     .scene.active {
       opacity: 1;
-      pointer-events: all;
+      pointer-events: auto;
     }
 
     /* ─── Background images ──────────────────────────────────── */
-    #scene-1 { background-image: url('pngassets/boss1.png'); }
-    #scene-2 { background-image: url('pngassets/boss2.png'); }
+    #scene-1 { background-image: url('pngassets/Boss1.png'); }
+    #scene-2 { background-image: url('pngassets/Boss2.png'); }
 
     /* ─── Dialogue bubble ────────────────────────────────────── */
+    /*
+     * Placed upper-left so the tail (bottom-right of dialog image)
+     * points naturally toward the character's head at ~42% x, ~20% y.
+     */
     .dialogue {
       position: absolute;
-
-      /*
-       * Default placement: upper-left quadrant, to the left of the character.
-       * Adjust these values once Boss images are in place.
-       */
-      left: 6%;
-      top: 18%;
-
-      max-width: 32%;
+      left: 3%;
+      top: 6%;
+      max-width: 38%;
       height: auto;
 
-      animation: float 3.5s ease-in-out infinite;
+      animation: bubble-float 3.5s ease-in-out infinite;
     }
 
     /* ─── Floating keyframes ─────────────────────────────────── */
-    @keyframes float {
+    @keyframes bubble-float {
       0%,
       100% { transform: translateY(0px); }
       50%  { transform: translateY(-8px); }
@@ -78,21 +76,21 @@
 
   <div id="intro">
 
-    <!-- Scene 1 ─ Boss1 background + Dialog1 bubble -->
+    <!-- Scene 1 ─ Boss1 background + Dialog 1 bubble -->
     <div class="scene active" id="scene-1">
       <img
         class="dialogue"
-        src="pngassets/dialog1.png"
+        src="pngassets/Dialog%201.png"
         alt=""
         draggable="false"
       >
     </div>
 
-    <!-- Scene 2 ─ Boss2 background + Dialog2 bubble -->
+    <!-- Scene 2 ─ Boss2 background + Dialog 2 bubble -->
     <div class="scene" id="scene-2">
       <img
         class="dialogue"
-        src="pngassets/dialog2.png"
+        src="pngassets/Dialog%202.png"
         alt=""
         draggable="false"
       >
@@ -102,20 +100,17 @@
 
   <script>
     (function () {
-      const intro   = document.getElementById('intro');
-      const scene1  = document.getElementById('scene-1');
-      const scene2  = document.getElementById('scene-2');
-
-      const SCENES = [scene1, scene2];
+      const intro  = document.getElementById('intro');
+      const scenes = Array.from(document.querySelectorAll('.scene'));
       let current  = 0;
 
       /* Fade-transition to the next scene on any click */
       intro.addEventListener('click', function () {
         const next = current + 1;
 
-        if (next < SCENES.length) {
-          SCENES[current].classList.remove('active');
-          SCENES[next].classList.add('active');
+        if (next < scenes.length) {
+          scenes[current].classList.remove('active');
+          scenes[next].classList.add('active');
           current = next;
         } else {
           /* All intro scenes shown — hand off to the main game */
